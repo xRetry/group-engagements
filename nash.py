@@ -20,7 +20,7 @@ def mixed_nash(rewards: np.ndarray) -> np.ndarray:  # TODO: check behavior for n
     # Set up y array -> [0, ..., 0, 1]
     b = np.zeros(rewards.shape[0]+1)
     b[-1] = 1
-    # Add right row to design matrix
+    # Add right column to design matrix
     A = np.column_stack((A, b-1))
     # Solve system of linear equations
     x = np.dot(np.linalg.pinv(A), b)

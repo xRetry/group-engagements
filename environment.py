@@ -2,24 +2,24 @@ import numpy as np
 import itertools
 import copy
 from dataclasses import dataclass
-from typing import List
+from typing import List, Tuple
 
 
 @dataclass(frozen=True)
 class Team:
-    healths: np.ndarray
-    dps: np.ndarray
-    timers: np.ndarray
-    change_time: np.ndarray
-    targets: np.ndarray = None
+    healths: tuple
+    dps: tuple
+    timers: tuple
+    change_time: tuple
+    targets: tuple = None
 
 
 @dataclass(frozen=True)
 class State:
-    teams: List[Team]
+    teams: Tuple[Team]
     time: float = 0.
     is_terminated:bool = False
-    rewards: np.ndarray = None
+    rewards: tuple = None
 
 
 class ExhaustiveAgent:
@@ -28,9 +28,9 @@ class ExhaustiveAgent:
     def __init__(self):
         self.float_cutoff = 1e-5
 
-    def next_targets(self, teams:List[Team], idx_own:int) -> iter:
+    def next_targets(self, teams:Tuple[Team], idx_own:int) -> iter:
         targets_old = teams[idx_own].targets
-        healths_own = teams[idx_own].healths
+        healths_own = np.array(teams[idx_own].healths)
         healths_enemy = []
         for i in range(len(teams)):
             if i != idx_own:
@@ -62,7 +62,7 @@ class ExhaustiveAgent:
 
     @staticmethod
     def _merge(targets_old, idx_new, targets_new):
-        targets = copy.copy(targets_old)
+        targets = np.array(targets_old)
         targets[idx_new] = targets_new
         return targets
 
@@ -92,11 +92,11 @@ class Environment:
             healths_final.append(healths_team)
             teams_new.append(
                 Team(
-                    healths=healths_team,
-                    dps=state.teams[t].dps,
-                    targets=targets_idx[t],
-                    timers=timers[idx:idx+n_players_team],
-                    change_time=state.teams[t].change_time
+                    healths=tuple(healths_team),
+                    dps=tuple(state.teams[t].dps),
+                    targets=tuple(targets_idx[t]),
+                    timers=tuple(timers[idx:idx+n_players_team]),
+                    change_time=tuple(state.teams[t].change_time)
                 )
             )
             idx += n_players_team
@@ -105,15 +105,15 @@ class Environment:
 
         state_new = State(
             time=state.time + dt_min,
-            teams=teams_new,
+            teams=tuple(teams_new),
             is_terminated=is_terminated,
-            rewards=rewards
+            rewards=tuple(rewards)
         )
 
         return state_new
 
     @staticmethod
-    def _aggregate_teams(teams: List[Team], targets_idx: List[np.ndarray]):
+    def _aggregate_teams(teams: Tuple[Team], targets_idx: List[np.ndarray]):
         healths = []
         dps_per_target = []
         timers = []
@@ -122,8 +122,8 @@ class Environment:
             dps_per_target.append(teams[t].dps)
 
             is_changing = np.equal(targets_idx[t], teams[t].targets)
-            timers_team = teams[t].timers
-            timers_team[is_changing] = teams[t].change_time[is_changing]
+            timers_team = np.array(teams[t].timers)
+            timers_team[is_changing] = np.array(teams[t].change_time)[is_changing]
             timers.append(timers_team)
         return np.concatenate(healths), np.concatenate(dps_per_target), np.concatenate(timers)
 
