@@ -2,7 +2,7 @@ import numpy as np
 import itertools
 import copy
 from dataclasses import dataclass
-from typing import List, Tuple
+from typing import List, Tuple  # TODO: use numpy typing as well
 
 
 @dataclass(frozen=True)
